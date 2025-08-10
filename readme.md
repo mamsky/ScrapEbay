@@ -52,7 +52,7 @@ scraping-product/
 3. **Jalankan server**
 
    ```bash
-   node src/app.js
+   npm start
    ```
 
 4. Server akan berjalan di:
