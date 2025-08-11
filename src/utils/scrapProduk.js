@@ -1,36 +1,53 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const scrapDetails = require("./scrapDetails");
+const puppeterDetails = require("./puppeter/puppeterDetails");
+const puppeteer = require("puppeteer");
 
 async function scrapProduk(url) {
+  let browser;
   try {
-    const { data: rawHTML } = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
-    const $ = cheerio.load(rawHTML);
+    const page = await browser.newPage();
+    await page.setUserAgent("Mozilla/5.0");
+
+    console.log("🔍 Membuka halaman list produk...");
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 5000 });
+
+    const html = await page.content();
+    const $ = cheerio.load(html);
     $("head, script, style, noscript").remove();
 
-    const items = $(".s-item").map(async (index, element) => {
-      const Name = $(element).find(".s-item__title").text();
+    const products = $(".s-item")
+      .map((i, element) => {
+        const Name = $(element).find(".s-item__title").text().trim() || "-";
+        const Price = $(element).find(".s-item__price").text().trim() || "-";
+        const productUrl = $(element).find(".s-item__link").attr("href") || "-";
+        return { Name, Price, productUrl };
+      })
+      .get();
 
-      const Price = $(element).find(".s-item__price").text();
+    for (let product of products) {
+      if (product.productUrl && product.productUrl !== "-") {
+        product.Description = await puppeterDetails(
+          browser,
+          product.productUrl
+        );
+      } else {
+        product.Description = "-";
+      }
+    }
 
-      const productUrl = $(element).find(".s-item__link").attr("href");
-
-      const productDescription = await scrapDetails(productUrl);
-
-      return {
-        Name,
-        Price,
-        Description: productDescription,
-      };
-    });
-
-    const resultsArray = await Promise.all(items.get());
-    return resultsArray.slice(0, 20);
+    return products;
   } catch (err) {
-    return `❌ Error fetching ${url}:`, err.message;
+    console.error("❌ Error scraping items:", err.message);
+    return [];
+  } finally {
+    if (browser) await browser.close();
   }
 }
 

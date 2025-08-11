@@ -5,6 +5,10 @@ Aplikasi ini mengambil **nama produk**, **harga**, dan **deskripsi** (dari halam
 
 ---
 
+[Scraping Ebay](./src/video/demo.mp4)
+
+---
+
 ## 📂 Struktur Folder
 
 ```
