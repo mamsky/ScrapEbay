@@ -5,7 +5,7 @@ Aplikasi ini mengambil **nama produk**, **harga**, dan **deskripsi** (dari halam
 
 ---
 
-[Scraping Ebay](./src/video/demo.gif)
+![Scraping Ebay](./src/video/demo.gif)
 
 ---
 
